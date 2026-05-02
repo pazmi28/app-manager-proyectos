@@ -8,14 +8,14 @@ import Layout from './components/layout/Layout';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
+import NewProjectPage from './pages/NewProjectPage';
+import SessionsPage from './pages/SessionsPage';
 
-// PrivateRoute: redirige a /login si no hay sesión
 function PrivateRoute({ children }) {
   const { user } = useAuth();
   return user ? children : <Navigate to="/login" replace />;
 }
 
-// PublicRoute: redirige al dashboard si ya hay sesión
 function PublicRoute({ children }) {
   const { user } = useAuth();
   return !user ? children : <Navigate to="/dashboard" replace />;
@@ -36,27 +36,17 @@ function AppRoutes() {
         }}
       />
       <Routes>
-        {/* Rutas públicas */}
-        <Route
-          path="/login"
-          element={<PublicRoute><LoginPage /></PublicRoute>}
-        />
-        <Route
-          path="/register"
-          element={<PublicRoute><RegisterPage /></PublicRoute>}
-        />
+        <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
+        <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
 
-        {/* Rutas protegidas */}
-        <Route
-          path="/"
-          element={<PrivateRoute><Layout /></PrivateRoute>}
-        >
+        <Route path="/" element={<PrivateRoute><Layout /></PrivateRoute>}>
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="dashboard" element={<DashboardPage />} />
-          {/* Sprint 2+: sessions, new-project, project/:id */}
+          <Route path="new-project" element={<NewProjectPage />} />
+          <Route path="sessions" element={<SessionsPage />} />
+          {/* Sprint 3: project/:id */}
         </Route>
 
-        {/* Catch-all — SIEMPRE la última */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </>
