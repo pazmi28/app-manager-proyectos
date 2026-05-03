@@ -87,5 +87,17 @@ export default function useProjects() {
       : 0,
   };
 
-  return { projects, loading, stats, addProject, updateProject, archiveProject };
+  const updateLastSummary = useCallback(async (projectId, summary) => {
+    try {
+      const ref = doc(db, 'projects', projectId);
+      await updateDoc(ref, {
+        lastSummary: summary,
+        updatedAt: serverTimestamp(),
+      });
+    } catch {
+      // silencioso — no crítico
+    }
+  }, []);
+
+  return { projects, loading, stats, addProject, updateProject, archiveProject, updateLastSummary };
 }

@@ -9,6 +9,7 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
 import NewProjectPage from './pages/NewProjectPage';
+import ProjectDetailPage from './pages/ProjectDetailPage';
 import SessionsPage from './pages/SessionsPage';
 
 function PrivateRoute({ children }) {
@@ -43,6 +44,7 @@ function AppRoutes() {
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="dashboard" element={<DashboardPage />} />
           <Route path="new-project" element={<NewProjectPage />} />
+          <Route path="project/:id" element={<ProjectDetailPage />} />
           <Route path="sessions" element={<SessionsPage />} />
           {/* Sprint 3: project/:id */}
         </Route>

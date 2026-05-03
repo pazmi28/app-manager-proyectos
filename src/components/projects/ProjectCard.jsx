@@ -1,4 +1,5 @@
 // src/components/projects/ProjectCard.jsx
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const STATUS_LABELS = { active: 'activo', paused: 'pausado', done: 'archivado' };
