@@ -966,8 +966,14 @@ input, textarea, select { font-family: inherit; }
     white-space: nowrap;
   }
 
+  /* Layout content — evita desbordamiento */
+  .lay-content {
+    padding: 16px 12px;
+    overflow-x: hidden;
+  }
+
   /* Dashboard — stats row */
-  .dash-stats {
+  .dash-stats-row {
     grid-template-columns: 1fr 1fr;
     gap: 8px;
   }
@@ -979,11 +985,14 @@ input, textarea, select { font-family: inherit; }
   .dash-grid {
     grid-template-columns: 1fr;
     gap: 8px;
+    width: 100%;
   }
 
   /* Project card */
   .proj-card {
     padding: 14px;
+    width: 100%;
+    min-width: 0;
   }
   .proj-card-last {
     font-size: 10px;
