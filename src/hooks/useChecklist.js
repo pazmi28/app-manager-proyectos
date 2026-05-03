@@ -80,14 +80,17 @@ const CHECKLIST_TEMPLATE = [
 export default function useChecklist(projectId) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [ready, setReady] = useState(false);
   const { user } = useAuth();
 
   useEffect(() => {
     if (!user || !projectId) {
       setItems([]);
       setLoading(false);
+      setReady(false);
       return;
     }
+    setReady(false);
     const q = query(
       collection(db, 'projects', projectId, 'checklist'),
       orderBy('order', 'asc')
@@ -95,9 +98,11 @@ export default function useChecklist(projectId) {
     const unsub = onSnapshot(q, (snap) => {
       setItems(snap.docs.map(d => ({ id: d.id, ...d.data() })));
       setLoading(false);
+      setReady(true);
     }, () => {
       toast.error('Error al cargar checklist');
       setLoading(false);
+      setReady(true);
     });
     return () => unsub();
   }, [user, projectId]);
@@ -175,10 +180,11 @@ export default function useChecklist(projectId) {
   const totalCount = applicableItems.length;
   const progress = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
 
-   return {
+  return {
     items,
     itemsByPhase,
     loading,
+    ready,
     doneCount,
     totalCount,
     progress,

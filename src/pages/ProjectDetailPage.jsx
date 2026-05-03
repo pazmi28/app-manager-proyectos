@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import useProjects from '../hooks/useProjects';
 import useChecklist from '../hooks/useChecklist';
@@ -19,22 +19,43 @@ const STATUS_LABELS = {
 export default function ProjectDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { projects, loading: projLoading, updateProject } = useProjects();
+  const { projects, loading: projLoading, updateProject, archiveProject, deleteProject } = useProjects();
   const project = projects.find(p => p.id === id);
 
   const {
-    itemsByPhase, loading: clLoading, doneCount, totalCount,
+    itemsByPhase, loading: clLoading, ready: clReady, doneCount, totalCount,
     progress, generateChecklist, toggleItem, togglePhaseNotApplicable, updateNotes,
-  } = useChecklist(project?.methodology === 'metodologia_v5.1' ? id : null);
+  } = useChecklist(id);
+
+  // Estado del formulario de edición
+  const [editing, setEditing] = useState(false);
+  const [editForm, setEditForm] = useState({});
+  const [saving, setSaving] = useState(false);
+  const [confirmArchive, setConfirmArchive] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
+  // Inicializar formulario cuando project carga
+  useEffect(() => {
+    if (project) {
+      setEditForm({
+        name: project.name ?? '',
+        stack: project.stack ?? '',
+        status: project.status ?? 'active',
+        methodology: project.methodology ?? null,
+        repoUrl: project.repoUrl ?? '',
+        vercelUrl: project.vercelUrl ?? '',
+      });
+    }
+  }, [project?.id]); // eslint-disable-line
 
   // Generar checklist automáticamente si no existe aún
   useEffect(() => {
     if (!project || project.methodology !== 'metodologia_v5.1') return;
-    if (clLoading) return;
+    if (!clReady) return;
     if (totalCount === 0) {
       generateChecklist();
     }
-  }, [clLoading, totalCount]); // eslint-disable-line
+  }, [clReady, totalCount, project?.id, project?.methodology]); // eslint-disable-line
 
   // Sincronizar progreso de checklist al proyecto
   useEffect(() => {
@@ -44,6 +65,31 @@ export default function ProjectDetailPage() {
       updateProject(id, { progress });
     }
   }, [progress, clLoading, totalCount]); // eslint-disable-line
+
+  async function handleSaveEdit() {
+    if (!editForm.name?.trim()) return;
+    setSaving(true);
+    const result = await updateProject(id, {
+      name: editForm.name.trim(),
+      stack: editForm.stack.trim(),
+      status: editForm.status,
+      methodology: editForm.methodology,
+      repoUrl: editForm.repoUrl.trim(),
+      vercelUrl: editForm.vercelUrl.trim(),
+    });
+    if (result.success) setEditing(false);
+    setSaving(false);
+  }
+
+  async function handleArchive() {
+    const result = await archiveProject(id);
+    if (result.success) navigate('/');
+  }
+
+  async function handleDelete() {
+    const result = await deleteProject(id);
+    if (result.success) navigate('/');
+  }
 
   if (projLoading) {
     return (
@@ -74,26 +120,158 @@ export default function ProjectDetailPage() {
       <div className="det-header">
         <div className="det-header-left">
           <button className="det-back" onClick={() => navigate('/')}>← Dashboard</button>
-          <h1 className="det-title">{project.name}</h1>
-          <div className="det-meta">
-            <span className={`det-method-tag ${method.cls}`}>{method.label}</span>
-            <span className={`det-status-pill ${status.cls}`}>{status.label}</span>
-            {project.stack && <span className="det-stack">{project.stack}</span>}
-          </div>
+          {!editing && (
+            <>
+              <h1 className="det-title">{project.name}</h1>
+              <div className="det-meta">
+                <span className={`det-method-tag ${method.cls}`}>{method.label}</span>
+                <span className={`det-status-pill ${status.cls}`}>{status.label}</span>
+                {project.stack && <span className="det-stack">{project.stack}</span>}
+              </div>
+            </>
+          )}
         </div>
         <div className="det-header-right">
-          {project.repoUrl && (
-            <a className="det-link-btn" href={project.repoUrl} target="_blank" rel="noreferrer">
-              GitHub ↗
-            </a>
-          )}
-          {project.vercelUrl && (
-            <a className="det-link-btn" href={project.vercelUrl} target="_blank" rel="noreferrer">
-              Vercel ↗
-            </a>
+          {!editing && (
+            <>
+              {project.repoUrl && (
+                <a className="det-link-btn" href={project.repoUrl} target="_blank" rel="noreferrer">
+                  GitHub ↗
+                </a>
+              )}
+              {project.vercelUrl && (
+                <a className="det-link-btn" href={project.vercelUrl} target="_blank" rel="noreferrer">
+                  Vercel ↗
+                </a>
+              )}
+              <button className="det-edit-btn" onClick={() => setEditing(true)}>
+                Editar
+              </button>
+            </>
           )}
         </div>
       </div>
+
+      {/* Formulario de edición */}
+      {editing && (
+        <div className="det-panel det-edit-panel">
+          <div className="det-edit-title">Editar proyecto</div>
+
+          <div className="det-edit-grid">
+            <div className="det-edit-field">
+              <label className="det-edit-label">Nombre</label>
+              <input
+                className="det-edit-input"
+                value={editForm.name}
+                onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))}
+                placeholder="Nombre del proyecto"
+              />
+            </div>
+
+            <div className="det-edit-field">
+              <label className="det-edit-label">Stack</label>
+              <input
+                className="det-edit-input"
+                value={editForm.stack}
+                onChange={e => setEditForm(f => ({ ...f, stack: e.target.value }))}
+                placeholder="Ej: React · Firebase · Vercel"
+              />
+            </div>
+
+            <div className="det-edit-field">
+              <label className="det-edit-label">Estado</label>
+              <select
+                className="det-edit-select"
+                value={editForm.status}
+                onChange={e => setEditForm(f => ({ ...f, status: e.target.value }))}
+              >
+                <option value="active">Activo</option>
+                <option value="paused">Pausado</option>
+                <option value="done">Completado</option>
+              </select>
+            </div>
+
+            <div className="det-edit-field">
+              <label className="det-edit-label">Metodología</label>
+              <select
+                className="det-edit-select"
+                value={editForm.methodology ?? ''}
+                onChange={e => setEditForm(f => ({ ...f, methodology: e.target.value || null }))}
+              >
+                <option value="metodologia_v5.1">metodologia_v5.1</option>
+                <option value="free">Avance libre</option>
+                <option value="">Sin asignar</option>
+              </select>
+            </div>
+
+            <div className="det-edit-field">
+              <label className="det-edit-label">URL GitHub</label>
+              <input
+                className="det-edit-input"
+                value={editForm.repoUrl}
+                onChange={e => setEditForm(f => ({ ...f, repoUrl: e.target.value }))}
+                placeholder="https://github.com/..."
+              />
+            </div>
+
+            <div className="det-edit-field">
+              <label className="det-edit-label">URL Vercel</label>
+              <input
+                className="det-edit-input"
+                value={editForm.vercelUrl}
+                onChange={e => setEditForm(f => ({ ...f, vercelUrl: e.target.value }))}
+                placeholder="https://mi-app.vercel.app"
+              />
+            </div>
+          </div>
+
+          <div className="det-edit-footer">
+            <div className="det-danger-actions">
+              <button
+                className="det-archive-btn"
+                onClick={() => setConfirmArchive(true)}
+              >
+                Marcar como completado
+              </button>
+              <button
+                className="det-delete-btn"
+                onClick={() => setConfirmDelete(true)}
+              >
+                Eliminar proyecto
+              </button>
+            </div>
+            {confirmArchive && (
+              <div className="det-confirm">
+                <span>¿Marcar como completado?</span>
+                <button className="det-confirm-yes" onClick={handleArchive}>Confirmar</button>
+                <button className="det-confirm-no" onClick={() => setConfirmArchive(false)}>Cancelar</button>
+              </div>
+            )}
+            {confirmDelete && (
+              <div className="det-confirm">
+                <span>¿Eliminar permanentemente? Esta acción no se puede deshacer.</span>
+                <button className="det-confirm-yes" onClick={handleDelete}>Eliminar</button>
+                <button className="det-confirm-no" onClick={() => setConfirmDelete(false)}>Cancelar</button>
+              </div>
+            )}
+            <div className="det-edit-actions">
+              <button
+                className="det-cancel-btn"
+                onClick={() => { setEditing(false); setConfirmArchive(false); setConfirmDelete(false); }}
+              >
+                Cancelar
+              </button>
+              <button
+                className="det-save-btn"
+                onClick={handleSaveEdit}
+                disabled={saving || !editForm.name?.trim()}
+              >
+                {saving ? 'Guardando…' : 'Guardar cambios'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Progreso */}
       {project.methodology === 'metodologia_v5.1' && (

@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   collection, query, where, orderBy,
-  onSnapshot, addDoc, updateDoc, doc,
+  onSnapshot, addDoc, updateDoc, deleteDoc, doc,
   serverTimestamp
 } from 'firebase/firestore';
 import { toast } from 'react-hot-toast';
@@ -87,6 +87,17 @@ export default function useProjects() {
       : 0,
   };
 
+  const deleteProject = useCallback(async (projectId) => {
+    try {
+      await deleteDoc(doc(db, 'projects', projectId));
+      toast.success('Proyecto eliminado');
+      return { success: true };
+    } catch {
+      toast.error('Error al eliminar el proyecto');
+      return { success: false };
+    }
+  }, []);
+
   const updateLastSummary = useCallback(async (projectId, summary) => {
     try {
       const ref = doc(db, 'projects', projectId);
@@ -99,5 +110,5 @@ export default function useProjects() {
     }
   }, []);
 
-  return { projects, loading, stats, addProject, updateProject, archiveProject, updateLastSummary };
+  return { projects, loading, stats, addProject, updateProject, archiveProject, deleteProject, updateLastSummary };
 }
