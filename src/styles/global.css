@@ -943,3 +943,90 @@ input, textarea, select { font-family: inherit; }
   .sess-log-header { flex-direction: column; align-items: flex-start; }
   .sess-filter-select { width: 100%; }
 }
+
+/* ─── RESPONSIVE MOBILE 390px ─── */
+@media (max-width: 600px) {
+
+  /* Topbar */
+  .lay-topbar {
+    padding: 10px 14px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .lay-topbar-nav {
+    gap: 2px;
+    overflow-x: auto;
+    width: 100%;
+    padding-bottom: 2px;
+  }
+  .lay-topbar-nav a,
+  .lay-topbar-nav button {
+    font-size: 11px;
+    padding: 5px 9px;
+    white-space: nowrap;
+  }
+
+  /* Dashboard — stats row */
+  .dash-stats {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .dash-stat-val {
+    font-size: 20px;
+  }
+
+  /* Dashboard — project grid */
+  .dash-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  /* Project card */
+  .proj-card {
+    padding: 14px;
+  }
+  .proj-card-last {
+    font-size: 10px;
+  }
+
+  /* Vista detalle */
+  .det-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .det-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+  .det-edit-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Formulario nuevo proyecto */
+  .np-method-options {
+    gap: 6px;
+  }
+  .np-method-option {
+    padding: 12px;
+  }
+
+  /* Sesiones */
+  .sess-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .sess-log-meta {
+    flex-direction: column;
+    gap: 4px;
+    align-items: flex-start;
+  }
+  .sess-form-footer {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .sess-form-footer button {
+    width: 100%;
+  }
+}
