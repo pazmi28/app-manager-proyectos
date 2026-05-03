@@ -26,7 +26,7 @@ export default function useProjects() {
     const unsub = onSnapshot(q, (snap) => {
       setProjects(snap.docs.map(d => ({ id: d.id, ...d.data() })));
       setLoading(false);
-    }, () => {
+    }, (err) => {
       toast.error('Error al cargar proyectos');
       setLoading(false);
     });
